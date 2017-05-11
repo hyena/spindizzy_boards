@@ -1,0 +1,16 @@
+# Copy this file to `config.toml` and fill in
+# the fields. You'll have to complete the steps
+# in the README.md for some values.
+
+[server]
+host = 'muck.spindizzy.org'
+port = 7073
+ssl = true
+
+[muck]
+character = 'YOUR_CHARACTER_NAME'
+password = 'YOUR_PASSWORD'
+# Update with the commands you've set on the MUCK
+get_posts_command = 'process_posts'
+get_name_command = 'getname'
+boards = ['+read', 'cread', 'rpread']
