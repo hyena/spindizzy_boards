@@ -2,15 +2,28 @@
 # the fields. You'll have to complete the steps
 # in the README.md for some values.
 
-[server]
+# How often to download the board content in seconds.
+interval = 300
+timezone = 'US/Pacific'  # Timezone to use for formatting dates
+
+[muck]
 host = 'muck.spindizzy.org'
 port = 7073
 ssl = true
-
-[muck]
 character = 'YOUR_CHARACTER_NAME'
 password = 'YOUR_PASSWORD'
 # Update with the commands you've set on the MUCK
 get_posts_command = 'process_posts'
 get_name_command = 'getname'
 boards = ['+read', 'cread', 'rpread']
+
+[web]
+url_base = "https://your_url_to_the_app.com/"  # Used to make urls.
+port = 7000  # Port the webserver should bind to.
+
+[twitter]
+enabled = false  # Whether or not to advertise changes to twitter
+api_key = 'YOUR_TWITTER_API_KEY'
+
+[mastodon]
+enabled = false
