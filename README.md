@@ -49,13 +49,13 @@ This code has been tested with Python 3.5, but should probably work in 2.7 and 3
 TODO
 ----
 There's rather a lot to do:
- [] Atom integration for rss readers
- [] Twitter integration
- [] Mastodon integration
- [] Re-architect the app into a json exposing endpoint with a react front-end
- [] SSL support, even though we'll usually run behind nginx
- [] Posts should be saved historically in a SQLAlchemy database
- [] The app should give a grace period to a new or edited post before sending out alerts so that deletes or multiple edits don't spam followers
+ - [ ] Atom integration for rss readers
+ - [ ] Twitter integration
+ - [ ] Mastodon integration
+ - [ ] Re-architect the app into a json exposing endpoint with a react front-end
+ - [ ] SSL support, even though we'll usually run behind nginx
+ - [ ] Posts should be saved historically in a SQLAlchemy database
+ - [ ] The app should give a grace period to a new or edited post before sending out alerts so that deletes or multiple edits don't spam followers
 
 
 Acknowledgements
