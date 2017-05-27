@@ -2,3 +2,4 @@ pyramid==1.8.3
 pytz==2017.2
 ssltelnet==0.9.2
 toml==0.9.2
+pyramid-jinja2==2.7
