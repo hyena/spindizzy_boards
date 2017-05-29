@@ -2,7 +2,7 @@
 @import url("https://overpass-30e2.kxcdn.com/overpass-mono.css");
 body {
     background-color: black;
-    font-family:  'DejaVu Sans Mono', 'overpass-mono', Inconsolata, monospace;
+    font-family:  'DejaVu Sans Mono', Inconsolata, 'overpass-mono', monospace;
     height:100%;
     padding: 20px;
     color: #abb2bf;
