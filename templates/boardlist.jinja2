@@ -1,0 +1,13 @@
+{% extends "html.jinja2" %}
+
+{% block title %} Board List {% endblock %}
+
+{% block body %}
+<ul>
+{% for board in boards %}
+    <li>
+        <a href="{{board}}">{{board}}</a>
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}

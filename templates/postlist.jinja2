@@ -1,0 +1,17 @@
+{% extends "html.jinja2" %}
+
+{% block title %} Posts on board {{ board }} {% endblock %}
+
+{% block body %}
+<ol>
+{% for post in posts %}
+    <li>
+        <a href="{{ board }}/{{ post.id }}">{{ post.title }}</a>
+        <strong>posted by</strong>
+        {{ post.author_name }}
+        <strong>at</strong>
+        {{ post.humantime }}
+    </li> 
+{% endfor %}
+</ol>
+{% endblock %}
