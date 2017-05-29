@@ -19,7 +19,9 @@ password = 'YOUR_PASSWORD'
 # Update with the commands you've set on the MUCK
 get_posts_command = 'process_posts'
 get_name_command = 'getname'
-boards = ['+read', 'cread', 'rpread']
+boards = [['+read', 'General Board'],
+          ['cread', 'Commands Board'],
+          ['rpread', 'Role-Playing Board']]
 
 
 [web]

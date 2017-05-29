@@ -38,6 +38,7 @@ class SpinDizzyBoards(object):
             self.downloader = FakeMuckDownloader(**config['muck'])
         else:
             self.downloader = MuckDownloader(**config['muck'])
+        self.board_names = {x[0]: x[1] for x in config['muck']['boards']}
         self.current_content = {}  # Will be filled in by a background thread.
         self.url_base = config['web']['url_base']
         self.tz = pytz.timezone(config['timezone'])
@@ -115,7 +116,9 @@ class SpinDizzyBoards(object):
     def list_boards(self, request):
         """View callable that shows a list of available boards."""
         boards = self.current_content.keys()
-        return {"boards": boards}
+        return {'boards': boards,
+                'board_names': self.board_names,
+                }
 
     def list_posts(self, request):
         """View callable that shows all the posts on a particular board."""
@@ -126,7 +129,8 @@ class SpinDizzyBoards(object):
             raise HTTPNotFound("No such board found.")
         return {'posts': [self.post2template(x)
                           for x in sorted(content[board].values(), key=lambda p: p['time'])],
-                'board': board
+                'board': board,
+                'board_name': self.board_names[board],
                }
 
     def view_post(self, request):
@@ -139,6 +143,7 @@ class SpinDizzyBoards(object):
             raise HTTPNotFound("Post not found")
         return {'post': self.post2template(content[board][postid]),
                 'board': board,
+                'board_name': self.board_names[board],
                }
 
 
@@ -152,7 +157,6 @@ if __name__ == "__main__":
     # Note that this could also be accomplished with pyramid's traversal functionality.
     # However, I think that for this usage case that adds more complexity than it's worth.
     config = Configurator()
-
     config.include("pyramid_jinja2")
 
     config.add_route('board_list', '/')

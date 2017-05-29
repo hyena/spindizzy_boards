@@ -16,7 +16,7 @@ import toml
 class MuckDownloader(object):
     """A class that facilitates downloading board contents from a MUCK such as SpinDizzy."""
     def __init__(self, host: str, port: int, ssl: bool, character: str, password: str,
-                 get_posts_command: str, get_name_command: str, boards: List[str]):
+                 get_posts_command: str, get_name_command: str, boards: List[List[str]]):
         self.host = host
         self.port = port
         self.ssl = ssl
@@ -24,7 +24,8 @@ class MuckDownloader(object):
         self.password = password
         self.get_posts_command = get_posts_command
         self.get_name_command = get_name_command
-        self.boards = boards
+        self.boards = boards = [x[0] for x in boards]
+        self.board_names = [x[1] for x in boards]
 
     def _get_posts_for_board(self, telnet, board_command='+read'):
         """
@@ -141,7 +142,7 @@ class FakeMuckDownloader(object):
     such as SpinDizzy. This allows us to test the webapp without setting up a 'live' muck
     account and running the MUF every time."""
     def __init__(self, host: str, port: int, ssl: bool, character: str, password: str,
-                 get_posts_command: str, get_name_command: str, boards: List[str]):
+                 get_posts_command: str, get_name_command: str, boards: List[List[str]]):
         pass
 
     def get_posts(self):
