@@ -12,6 +12,9 @@
                 height:100%;
                 padding: 20px;
                 color: #abb2bf;
+                display: flex;
+                flex-direction: column;
+                min-height: 90vh;
             }
             a:link {
                 color: #56b6c2;
@@ -20,7 +23,7 @@
                 color: #c678dd;
             }
             .hyena-color {
-                color: #d2b48cff;
+                color: #d2b48c;
             }
             .foxthingfox-color {
                 color: white;
@@ -60,11 +63,12 @@
                 align-items: space-between;
                 justify-content: space-between;
             }
-
-            #content {
-                font-size:1.4em;
+            .content {
+                flex: 1 0 auto;
             }
-            #footer {
+            .footer {
+                margin-top: 50px;
+                font-size: 0.9em;
                 display: flex;
                 flex-flow: column;
                 justify-content: space-around;
@@ -75,12 +79,34 @@
                 height: auto;
                 margin-left: 15px;
             }
+            span.author {
+                vertical-align: bottom;
+                display: inline-flex;
+                align-items: center;
+                flex-direction: column;
+            }
+            span.author > img.foxthingfox {
+                width: 4em;
+            }
+            span.author > img.hyena {
+                width: 7em;
+            }
         </style>
         {% endblock head %}
     </head>
     <body>
-        {% block breadcrumb %}{% endblock %}
-        <h1>{{ self.title() }}</h1>
-        {% block body %}{% endblock %}
+        <div class="content">
+            {% block breadcrumb %}{% endblock %}
+            <h1>{{ self.title() }}</h1>
+            {% block body %}{% endblock %}
+        </div>
+        <div class="footer">
+            {% block footer %}
+            <div>
+                Direct feedback to
+                <span class="author"><img class="foxthingfox" src="/static/kandra.png"><span class="foxthingfox-color">Kandra</span></span>
+                and <span class="author"><img class="hyena" src="/static/regan.svg"><span class="hyena-color">Regan Schwarzwald</span></span> or on the <a href="https://github.com/hyena/spindizzy_boards">github project</a>.</div>
+            {% endblock footer %}
+        </div>
     </body>
 </html>

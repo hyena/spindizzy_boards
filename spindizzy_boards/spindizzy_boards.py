@@ -168,6 +168,8 @@ if __name__ == "__main__":
     config = Configurator()
     config.include("pyramid_jinja2")
 
+    config.add_static_view(name='static', path='static')
+
     config.add_route('board_list', '/')
     config.add_view(worker.list_boards, route_name='board_list', renderer="templates/boardlist.jinja2")
 
