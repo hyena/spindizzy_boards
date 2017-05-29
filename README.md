@@ -49,6 +49,7 @@ This code has been tested with Python 3.5, but should probably work in 2.7 and 3
 Testing without a Muck
 ----------------------
 During development, it can be useful to test without a live MUCK connection, account, M1-bit, etc. For those purposes there's a `fake_muck` setting in `config.toml`. Setting it to `true` will make the webserver use fake content instead of making a connection.
+You'll still need to have a `boards` entry with at least `+read` defined in your `config.toml` file.
 
 
 TODO
@@ -61,7 +62,7 @@ There's plenty of work left to do:
  - [ ] SSL support, even though we'll usually run behind nginx
  - [ ] Posts should be saved historically in a SQLAlchemy database
  - [ ] The app should give a grace period to a new or edited post before sending out alerts so that deletes or multiple edits don't spam followers
- - [ ] Move CSS into static assets for a little more efficiency.
+ - [X] Move CSS into static assets for a little more efficiency.
 
 
 Acknowledgements
