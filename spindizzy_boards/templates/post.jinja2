@@ -18,4 +18,17 @@
 {% for line in post.content.split('\n') %}
     <p>{{ line }}</p>
 {% endfor %}
+
+<span class="prevnext">
+  <span class="prev">
+  {% if prev_post %}
+    « <a href="{{ prev_post.id }}">Prev: {{ post_index - 1 }}. {{ prev_post.title }}</a>
+  {% endif %}
+  </span>
+  <span class="next">
+  {% if next_post %}
+    <a href="{{ next_post.id }}"> Next: {{ post_index + 1 }}. {{ next_post.title }}</a> »
+  {% endif %}
+  </span>
+</span>
 {% endblock %}
