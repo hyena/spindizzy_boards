@@ -5,19 +5,7 @@
 {% block body %}
 <p><strong>From:</strong> {{ post.author_name }}</p>
 <p><strong>Date:</strong> {{ post.humantime }}</p>
-
-{#
-    What if someone puts HTML or Javascript in their post?
-
-    It would of course be obvious to anyone reading the bulletin board
-    post in its original form, but that doesn't mean it isn't a problem
-    (at least, everything I've read suggests that we don't want to let
-    users put arbitrary code in other users' web browsers.)  We might
-    want to "sanitize" the post body somehow.
-
-    ... and also the post title.  For good measure, you could do it
-    with the author's username too, just to be sure.
-#}
+<hr />
 
 {% for line in post.content.split('\n') %}
     <p>{{ line }}</p>
