@@ -2,7 +2,7 @@
 <html>
     <head>
         {% block head %}
-        <title>spindizzy_boards: {% block title %}{% endblock %}</title>
+        <title>SpinDizzy Boards: {% block title %}{% endblock %}</title>
         <style>
             @import url("https://fonts.googleapis.com/css?family=Inconsolata");
             @import url("https://overpass-30e2.kxcdn.com/overpass-mono.css");
@@ -24,6 +24,20 @@
             }
             .foxthingfox-color {
               color: white;
+            }
+
+            ul.board-list {
+              display: flex;
+              flex-flow: column;
+              flex-wrap: wrap;
+            }
+            ul.board-list > li {
+              font-size: 1.4em;
+              margin: 3px;
+            }
+            ol.post-list > li {
+              font-size: 1.2em;
+              margin: 2px;
             }
             #content {
               font-size:1.4em;

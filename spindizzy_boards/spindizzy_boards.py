@@ -38,6 +38,7 @@ class SpinDizzyBoards(object):
             self.downloader = FakeMuckDownloader(**config['muck'])
         else:
             self.downloader = MuckDownloader(**config['muck'])
+        self.boards = [x[0] for x in config['muck']['boards']]
         self.board_names = {x[0]: x[1] for x in config['muck']['boards']}
         self.current_content = {}  # Will be filled in by a background thread.
         self.url_base = config['web']['url_base']
@@ -115,7 +116,8 @@ class SpinDizzyBoards(object):
     ### View Callables.
     def list_boards(self, request):
         """View callable that shows a list of available boards."""
-        boards = self.current_content.keys()
+        loaded_boards = self.current_content.keys()
+        boards = [x for x in self.boards if x in loaded_boards]
         return {'boards': boards,
                 'board_names': self.board_names,
                 }

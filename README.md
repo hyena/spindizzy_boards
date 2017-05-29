@@ -53,7 +53,7 @@ During development, it can be useful to test without a live MUCK connection, acc
 
 TODO
 ----
-There's rather a lot to do:
+There's plenty of work left to do:
  - [ ] Atom integration for rss readers
  - [ ] Twitter integration
  - [ ] Mastodon integration
@@ -61,6 +61,7 @@ There's rather a lot to do:
  - [ ] SSL support, even though we'll usually run behind nginx
  - [ ] Posts should be saved historically in a SQLAlchemy database
  - [ ] The app should give a grace period to a new or edited post before sending out alerts so that deletes or multiple edits don't spam followers
+ - [ ] Move CSS into static assets for a little more efficiency.
 
 
 Acknowledgements
