@@ -10,7 +10,7 @@ from pyramid.httpexceptions import HTTPNotFound
 import pytz
 import toml
 
-from download_posts import FakeMuckDownloader, MuckDownloader
+from muck_downloader import FakeMuckDownloader, MuckDownloader
 
 
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
