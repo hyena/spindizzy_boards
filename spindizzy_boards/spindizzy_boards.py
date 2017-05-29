@@ -7,12 +7,10 @@ from typing import Dict
 from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
 import pytz
 import toml
 
-#from download_posts import MuckDownloader
-from mock_download_posts import MuckDownloader
+from download_posts import FakeMuckDownloader, MuckDownloader
 
 
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
@@ -37,7 +35,10 @@ class SpinDizzyBoards(object):
         Args:
             config (dict): A parsed config.toml object.
         """
-        self.downloader = MuckDownloader(**config['muck'])
+        if config['fake_muck']:
+            self.downloader = FakeMuckDownloader(**config['muck'])
+        else:
+            self.downloader = MuckDownloader(**config['muck'])
         self.current_content = {}  # Will be filled in by a background thread.
         self.url_base = config['web']['url_base']
         self.tz = pytz.timezone(config['timezone'])

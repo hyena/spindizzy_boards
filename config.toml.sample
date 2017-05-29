@@ -6,6 +6,10 @@
 interval = 300
 timezone = 'US/Pacific'  # Timezone to use for formatting dates
 
+# If true will use fake content and not connect to a MUCK. Useful for testing.
+fake_muck = false
+
+
 [muck]
 host = 'muck.spindizzy.org'
 port = 7073
@@ -17,13 +21,16 @@ get_posts_command = 'process_posts'
 get_name_command = 'getname'
 boards = ['+read', 'cread', 'rpread']
 
+
 [web]
 url_base = "https://your_url_to_the_app.com/"  # Used to make urls.
 port = 7000  # Port the webserver should bind to.
 
+
 [twitter]
 enabled = false  # Whether or not to advertise changes to twitter
 api_key = 'YOUR_TWITTER_API_KEY'
+
 
 [mastodon]
 enabled = false
