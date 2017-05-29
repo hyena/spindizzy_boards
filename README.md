@@ -46,6 +46,11 @@ This code has been tested with Python 3.5, but should probably work in 2.7 and 3
   5. Test it: `python spindizzy_boards/spindizzy_boards.py` and check out the webserver according to the port you set up in `config.toml`. e.g. http://localhost:7000/+read
 
 
+Testing without a Muck
+----------------------
+During development, it can be useful to test without a live MUCK connection, account, M1-bit, etc. For those purposes there's a `fake_muck` setting in `config.toml`. Setting it to `true` will make the webserver use fake content instead of making a connection.
+
+
 TODO
 ----
 There's rather a lot to do:

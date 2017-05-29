@@ -16,7 +16,6 @@ from muck_downloader import FakeMuckDownloader, MuckDownloader
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
 
 
-
 class SpinDizzyBoards(object):
     """
     A class that is responsible for most of the functionality
@@ -116,7 +115,6 @@ class SpinDizzyBoards(object):
     def list_boards(self, request):
         """View callable that shows a list of available boards."""
         boards = self.current_content.keys()
-        #return Response(" ".join(boards))
         return {"boards": boards}
 
     def list_posts(self, request):
@@ -126,24 +124,21 @@ class SpinDizzyBoards(object):
         board = request.matchdict['board_command'].lower()
         if board not in content:
             raise HTTPNotFound("No such board found.")
-
-        return { 'posts': [ self.post2template(x)
-                            for x in sorted(content[board].values(), key=lambda p: p['time']) ],
-                 'board': board
+        return {'posts': [self.post2template(x)
+                          for x in sorted(content[board].values(), key=lambda p: p['time'])],
+                'board': board
                }
 
     def view_post(self, request):
         """View callable that shows the contents of a post."""
-        # Grab this at the start because it might get updated in a background thread.
+        # Grab this at the start because it might be updated by the background thread.
         content = self.current_content
         board = request.matchdict['board_command'].lower()
         postid = int(request.matchdict['post_id'])
         if board not in content or postid not in content[board]:
             raise HTTPNotFound("Post not found")
-        #post = content[board][postid]
-
-        return { 'post': self.post2template(content[board][postid]),
-                 'board': board
+        return {'post': self.post2template(content[board][postid]),
+                'board': board,
                }
 
 
