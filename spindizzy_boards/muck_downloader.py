@@ -2,7 +2,6 @@
 Module to read the contents of a message board
 from a remote MUCK server.
 """
-# TODO(hyena): Make this whole logic a background task in a larger program.
 from collections import deque
 from datetime import datetime
 from typing import Dict, List
@@ -24,7 +23,7 @@ class MuckDownloader(object):
         self.password = password
         self.get_posts_command = get_posts_command
         self.get_name_command = get_name_command
-        self.boards = boards = [x[0] for x in boards]
+        self.boards = [x[0] for x in boards]
         self.board_names = [x[1] for x in boards]
 
     def _get_posts_for_board(self, telnet, board_command='+read'):
