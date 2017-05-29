@@ -14,49 +14,62 @@
                 color: #abb2bf;
             }
             a:link {
-              color: #56b6c2;
+                color: #56b6c2;
             }
             a:visited {
-              color: #c678dd;
+                color: #c678dd;
             }
             .hyena-color {
-              color: #d2b48cff;
+                color: #d2b48cff;
             }
             .foxthingfox-color {
-              color: white;
+                color: white;
+            }
+
+            ul.breadcrumb {
+                padding: 8px 16px;
+            }
+            ul.breadcrumb li {
+                display: inline;
+                font-size: 1em
+            }
+            ul.breadcrumb li+li:before {
+                padding: 8px;
+                content: "/\00a0";
             }
 
             ul.board-list {
-              display: flex;
-              flex-flow: column;
-              flex-wrap: wrap;
+                display: flex;
+                flex-flow: column;
+                flex-wrap: wrap;
             }
             ul.board-list > li {
-              font-size: 1.4em;
-              margin: 3px;
+                font-size: 1.4em;
+                margin: 3px;
             }
             ol.post-list > li {
-              font-size: 1.2em;
-              margin: 2px;
+                font-size: 1.2em;
+                margin: 2px;
             }
             #content {
-              font-size:1.4em;
+                font-size:1.4em;
             }
             #footer {
-              display: flex;
-              flex-flow: column;
-              justify-content: space-around;
-              align-items: center;
+                display: flex;
+                flex-flow: column;
+                justify-content: space-around;
+                align-items: center;
             }
             #logo {
-              width: 3em;
-              height: auto;
-              margin-left: 15px;
+                width: 3em;
+                height: auto;
+                margin-left: 15px;
             }
         </style>
         {% endblock head %}
     </head>
     <body>
+        {% block breadcrumb %}{% endblock %}
         <h1>{{ self.title() }}</h1>
         {% block body %}{% endblock %}
     </body>

@@ -143,7 +143,14 @@ class SpinDizzyBoards(object):
         postid = int(request.matchdict['post_id'])
         if board not in content or postid not in content[board]:
             raise HTTPNotFound("Post not found")
+        post_ids = sorted(content[board].keys())
+        post_pos = post_ids.index(postid)
+        prev_post_id = content[board][post_ids[post_pos - 1]] if post_pos > 0 else None
+        next_post_id = content[board][post_ids[post_pos + 1]] if post_pos + 1 < len(post_ids) else None
         return {'post': self.post2template(content[board][postid]),
+                'post_index': post_pos + 1,
+                'prev_post': self.post2template(prev_post_id) if prev_post_id is not None else None,
+                'next_post': self.post2template(next_post_id) if next_post_id is not None else None,
                 'board': board,
                 'board_name': self.board_names[board],
                }

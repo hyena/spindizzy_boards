@@ -1,5 +1,13 @@
 {% extends "html.jinja2" %}
 
+{% block breadcrumb %}
+<ul class="breadcrumb">
+  <li><a href="/">SpinDizzy Boards</a></li>
+  <li><a href="/{{ board }}">{{ board_name }}</a></li>
+  <li>{{ post_index }}. {{ post.title }}</li>
+</ul>
+{% endblock breadcrumb %}
+
 {% block title %} {{ post.title }} ~ {{ post.author_name }} {% endblock %}
 
 {% block body %}
