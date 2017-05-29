@@ -48,7 +48,10 @@ ol.post-list > li {
     font-size: 1.2em;
     margin: 2px;
 }
-
+p.post-body {
+    margin: 0;
+    white-space: pre-wrap;
+}
 span.prevnext {
     margin-top: 50px;
     display: flex;
