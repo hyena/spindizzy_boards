@@ -154,16 +154,15 @@ if __name__ == "__main__":
     config = Configurator()
 
     config.include("pyramid_jinja2")
-    config.add_jinja2_search_path("../templates")
 
     config.add_route('board_list', '/')
-    config.add_view(worker.list_boards, route_name='board_list', renderer="boardlist.jinja2")
+    config.add_view(worker.list_boards, route_name='board_list', renderer="templates/boardlist.jinja2")
 
     config.add_route('posts_list', '/{board_command}')
-    config.add_view(worker.list_posts, route_name='posts_list', renderer="postlist.jinja2")
+    config.add_view(worker.list_posts, route_name='posts_list', renderer="templates/postlist.jinja2")
 
     config.add_route('view_post', '/{board_command}/{post_id:\d+}')
-    config.add_view(worker.view_post, route_name='view_post', renderer="post.jinja2")
+    config.add_view(worker.view_post, route_name='view_post', renderer="templates/post.jinja2")
 
     # TODO(hyena): Set up a *real* wsgi environment.
     app = config.make_wsgi_app()
