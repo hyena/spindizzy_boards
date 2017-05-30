@@ -51,9 +51,6 @@ ol.post-list > li {
 p.post-body {
     margin: 0;
     white-space: pre-wrap;
-    /* Indent all lines but the first, matching behavior of TinyFugue. */
-    margin-left: 2em;
-   text-indent: -2em;
 }
 span.prevnext {
     margin-top: 50px;
