@@ -4,17 +4,18 @@ import threading
 import time
 from typing import Dict
 
-from wsgiref.simple_server import make_server
+from feedgen.feed import FeedGenerator
 from pyramid.config import Configurator
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPServiceUnavailable
+from pyramid.response import Response
 import pytz
 import toml
+from wsgiref.simple_server import make_server
 
 from muck_downloader import FakeMuckDownloader, MuckDownloader
 
 
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
-
 
 class SpinDizzyBoards(object):
     """
@@ -40,9 +41,13 @@ class SpinDizzyBoards(object):
             self.downloader = MuckDownloader(**config['muck'])
         self.boards = [x[0] for x in config['muck']['boards']]
         self.board_names = {x[0]: x[1] for x in config['muck']['boards']}
-        self.current_content = {}  # Will be filled in by a background thread.
         self.url_base = config['web']['url_base']
         self.tz = pytz.timezone(config['timezone'])
+        self.feed_domain = config['web']['feed_domain']
+
+        # Will be filled in by a background thread.
+        self.current_content = {}
+        self.feeds = {}
 
         # Start up our background task.
         self.interval = config['interval']
@@ -68,6 +73,58 @@ class SpinDizzyBoards(object):
                  'content': x['content']
                }
 
+    def _construct_feeds(self) -> Dict[str, Dict[str, str]]:
+        """
+        Takes the current content and returns a constructed dictionary
+        of atom and rss formatted feeds. This method should only be
+        called by the background thread.
+
+        :return: A dictionary with string keys, one for each board
+                 command and one for ``master``. The values are
+                 dictionaries mapping string keys for formats
+                 ('atom' and 'rss') to XML-formated feeds.
+        """
+        def id_generator(name, ts):
+            return('tag:{feed_domain},{date}:{name}'
+                   .format(feed_domain=self.feed_domain,
+                           date=datetime.fromtimestamp(ts).strftime('%Y-%m-%d'),
+                           name=name))
+
+        new_feeds = {}
+        master_feedgen = FeedGenerator()
+        master_feedgen.title("SpinDizzy Boards Master Feed")
+        master_feedgen.description("All posts as scraped from SpinDizzy")
+        master_feedgen.id(id_generator('master', 0))
+        for board_command in self.current_content:
+            board_feedgen = FeedGenerator()
+            board_feedgen.title("{} Feed".format(self.board_names[board_command]))
+            board_feedgen.description("Posts scraped from {}"
+                                      .format(self.board_names[board_command]))
+            board_feedgen.id(id_generator(board_command, 0))
+            for post in self.current_content[board_command].values():
+                for entry in (master_feedgen.add_entry(), board_feedgen.add_entry()):
+                    entry.title(post['title'])
+                    # RSS insists on an email which is annoying.
+                    entry.author({'name': post['owner_name'], 'email': ''})
+                    entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
+                    entry.link({'href': '{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
+                    entry.content(post['content'])
+                    entry.id(id_generator(name='{}/{}'.format(board_command, post['time']),
+                                          ts=post['time']))
+            new_feeds[board_command] = {}
+            board_feedgen.link({'href': '/{}/atom'.format(board_command), 'rel': 'self'})
+            new_feeds[board_command]['atom'] = board_feedgen.atom_str(pretty=True)
+            board_feedgen.link({'href': '/{}/rss'.format(board_command), 'rel': 'self'})
+            new_feeds[board_command]['rss'] = board_feedgen.rss_str(pretty=True)
+        new_feeds['master'] = {}
+        master_feedgen.link({'href': '/atom', 'rel': 'self'})
+        new_feeds['master']['atom'] = master_feedgen.atom_str(pretty=True)
+        master_feedgen.link({'href': '/rss', 'rel': 'self'})
+        new_feeds['master']['rss'] = master_feedgen.rss_str(pretty=True)
+
+        print(new_feeds)
+        return new_feeds
+
     def command_for_post(self, board: str, post_id: int):
         """ Generate the muck side command to read a given postid, given present board contents."""
         # This assumes that the posts are sorted by time.
@@ -91,6 +148,7 @@ class SpinDizzyBoards(object):
             # Expose the downloaded content without waiting for sending announcements.
             # The GIL makes this safe.
             self.current_content = self.downloader.get_posts()
+            self.feeds = self._construct_feeds()
             if old_content:  # Only send out alerts if we previously had content.
                 for board in self.current_content:
                     for post_id in self.current_content[board]:
@@ -155,6 +213,27 @@ class SpinDizzyBoards(object):
                 'board_name': self.board_names[board],
                }
 
+    def master_feed(self, request):
+        """View callable that returns an atom feed for all boards."""
+        if not self.feeds:
+            # Tell the user to come back later.
+            raise HTTPServiceUnavailable(headers={'Retry-After': 60})
+        return Response(self.feeds['master']['atom'],
+                        content_type='application/atom+xml')
+
+    def board_feed(self, request):
+        """View callable that returns an atom feed for a particular board."""
+        board = request.matchdict['board_command'].lower()
+        if board not in self.board_names:
+            raise HTTPNotFound("No such board found.")
+        elif not self.feeds:
+            # Tell the user to come back later.
+            raise HTTPServiceUnavailable(headers={'Retry-After': 60})
+        elif board not in self.feeds:
+            raise HTTPNotFound("No such board found.")
+        return Response(self.feeds[board]['atom'],
+                        content_type='application/atom+xml')
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
@@ -173,12 +252,18 @@ if __name__ == "__main__":
     config.add_route('board_list', '/')
     config.add_view(worker.list_boards, route_name='board_list', renderer="templates/boardlist.jinja2")
 
+    # n.b. this must be registered before the /board_command route.
+    config.add_route('master_feed', '/atom')
+    config.add_view(worker.master_feed, route_name='master_feed')
+
     config.add_route('posts_list', '/{board_command}')
     config.add_view(worker.list_posts, route_name='posts_list', renderer="templates/postlist.jinja2")
 
     config.add_route('view_post', '/{board_command}/{post_id:\d+}')
     config.add_view(worker.view_post, route_name='view_post', renderer="templates/post.jinja2")
 
+    config.add_route('board_feed', '/{board_command}/atom')
+    config.add_view(worker.board_feed, route_name='board_feed')
     # TODO(hyena): Set up a *real* wsgi environment.
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', conf_toml['web']['port'], app)

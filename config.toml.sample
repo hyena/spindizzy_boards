@@ -26,14 +26,19 @@ boards = [['+read', 'General Board'],
 
 
 [web]
-url_base = "https://your_url_to_the_app.com/"  # Used to make urls.
+# route_prefix will be prepended to all routes in the web app. This can be helpful,
+# for example, if you're running the app behind a reverse proxy.
+route_prefix = 'spindizzy_boards'
 port = 7000  # Port the webserver should bind to.
+# `feed_domain` is used exclusively to make atom/rss feed ids and can be ignored
+# if you don't care about that feature. This should be either a domain or an email.
+feed_domain = 'spindizzy.org'
 
 
-[twitter]
+[twitter]  # Unimplemented
 enabled = false  # Whether or not to advertise changes to twitter
 api_key = 'YOUR_TWITTER_API_KEY'
 
 
-[mastodon]
+[mastodon]  # Unimplemented
 enabled = false
