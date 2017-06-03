@@ -76,13 +76,12 @@ class SpinDizzyBoards(object):
     def _construct_feeds(self) -> Dict[str, Dict[str, str]]:
         """
         Takes the current content and returns a constructed dictionary
-        of atom and rss formatted feeds. This method should only be
+        of atom-formatted feeds. This method should only be
         called by the background thread.
 
         :return: A dictionary with string keys, one for each board
                  command and one for ``master``. The values are
-                 dictionaries mapping string keys for formats
-                 ('atom' and 'rss') to XML-formated feeds.
+                 XML-formated feeds.
         """
         def id_generator(name, ts):
             return('tag:{feed_domain},{date}:{name}'
@@ -90,14 +89,20 @@ class SpinDizzyBoards(object):
                            date=datetime.fromtimestamp(ts).strftime('%Y-%m-%d'),
                            name=name))
 
+        # TODO(hyena): It would be more useful if these links were absolute.
+        # Consider adding that if we ever make the web-app aware of its own
+        # url.
+
         new_feeds = {}
         master_feedgen = FeedGenerator()
         master_feedgen.title("SpinDizzy Boards Master Feed")
+        master_feedgen.link({'href': '/atom', 'rel': 'self'})
         master_feedgen.description("All posts as scraped from SpinDizzy")
         master_feedgen.id(id_generator('master', 0))
         for board_command in self.current_content:
             board_feedgen = FeedGenerator()
             board_feedgen.title("{} Feed".format(self.board_names[board_command]))
+            board_feedgen.link({'href': '/{}/atom'.format(board_command), 'rel': 'self'})
             board_feedgen.description("Posts scraped from {}"
                                       .format(self.board_names[board_command]))
             board_feedgen.id(id_generator(board_command, 0))
@@ -105,24 +110,15 @@ class SpinDizzyBoards(object):
                 for entry in (master_feedgen.add_entry(), board_feedgen.add_entry()):
                     entry.title(post['title'])
                     # RSS insists on an email which is annoying.
-                    entry.author({'name': post['owner_name'], 'email': ''})
+                    entry.author({'name': post['owner_name']})
                     entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
                     entry.link({'href': '{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
                     entry.content(post['content'])
                     entry.id(id_generator(name='{}/{}'.format(board_command, post['time']),
                                           ts=post['time']))
-            new_feeds[board_command] = {}
-            board_feedgen.link({'href': '/{}/atom'.format(board_command), 'rel': 'self'})
-            new_feeds[board_command]['atom'] = board_feedgen.atom_str(pretty=True)
-            board_feedgen.link({'href': '/{}/rss'.format(board_command), 'rel': 'self'})
-            new_feeds[board_command]['rss'] = board_feedgen.rss_str(pretty=True)
-        new_feeds['master'] = {}
-        master_feedgen.link({'href': '/atom', 'rel': 'self'})
-        new_feeds['master']['atom'] = master_feedgen.atom_str(pretty=True)
-        master_feedgen.link({'href': '/rss', 'rel': 'self'})
-        new_feeds['master']['rss'] = master_feedgen.rss_str(pretty=True)
+            new_feeds[board_command] = board_feedgen.atom_str(pretty=True)
+        new_feeds['master'] = master_feedgen.atom_str(pretty=True)
 
-        print(new_feeds)
         return new_feeds
 
     def command_for_post(self, board: str, post_id: int):
@@ -218,7 +214,7 @@ class SpinDizzyBoards(object):
         if not self.feeds:
             # Tell the user to come back later.
             raise HTTPServiceUnavailable(headers={'Retry-After': 60})
-        return Response(self.feeds['master']['atom'],
+        return Response(self.feeds['master'],
                         content_type='application/atom+xml')
 
     def board_feed(self, request):
@@ -231,7 +227,7 @@ class SpinDizzyBoards(object):
             raise HTTPServiceUnavailable(headers={'Retry-After': 60})
         elif board not in self.feeds:
             raise HTTPNotFound("No such board found.")
-        return Response(self.feeds[board]['atom'],
+        return Response(self.feeds[board],
                         content_type='application/atom+xml')
 
 

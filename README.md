@@ -54,8 +54,8 @@ You'll still need to have a `boards` entry with at least `+read` defined in your
 
 TODO
 ----
-There's plenty of work left to do:
- - [ ] Atom integration for rss readers
+There's plenty of work left to do if people are interested:
+ - [X] Atom integration for rss readers
  - [ ] Twitter integration
  - [ ] Mastodon integration
  - [ ] Re-architect the app into a json exposing endpoint with a react front-end
