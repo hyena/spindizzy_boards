@@ -95,13 +95,13 @@ class SpinDizzyBoards(object):
 
         new_feeds = {}
         master_feedgen = FeedGenerator()
-        master_feedgen.title("SpinDizzy Boards Master Feed")
+        master_feedgen.title("SpinDizzy Boards Master")
         master_feedgen.link({'href': '/atom', 'rel': 'self'})
         master_feedgen.description("All posts as scraped from SpinDizzy")
         master_feedgen.id(id_generator('master', 0))
         for board_command in self.current_content:
             board_feedgen = FeedGenerator()
-            board_feedgen.title("{} Feed".format(self.board_names[board_command]))
+            board_feedgen.title("SpinDizzy {}".format(self.board_names[board_command]))
             board_feedgen.link({'href': '/{}/atom'.format(board_command), 'rel': 'self'})
             board_feedgen.description("Posts scraped from {}"
                                       .format(self.board_names[board_command]))
@@ -113,7 +113,7 @@ class SpinDizzyBoards(object):
                     entry.author({'name': post['owner_name']})
                     entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
                     entry.link({'href': '{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
-                    entry.content(post['content'])
+                    entry.content(post['content'], type='text')
                     entry.id(id_generator(name='{}/{}'.format(board_command, post['time']),
                                           ts=post['time']))
             new_feeds[board_command] = board_feedgen.atom_str(pretty=True)
