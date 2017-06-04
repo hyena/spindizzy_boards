@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import textwrap
 import threading
 import time
 from typing import Dict
@@ -10,12 +11,16 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPServiceUnavailable
 from pyramid.response import Response
 import pytz
 import toml
+import twitter
+from twitter.error import TwitterError
 from wsgiref.simple_server import make_server
 
 from muck_downloader import FakeMuckDownloader, MuckDownloader
 
 
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
+_TWEET_LENGTH = 140
+
 
 class SpinDizzyBoards(object):
     """
@@ -44,6 +49,17 @@ class SpinDizzyBoards(object):
         self.url_base = config['web']['url_base']
         self.tz = pytz.timezone(config['timezone'])
         self.feed_domain = config['web']['feed_domain']
+
+        if config['twitter']['enabled']:
+            self.twitter_enabled = True
+            self.twitter_api = twitter.Api(
+                config['twitter']['consumer_key'],
+                config['twitter']['consumer_secret'],
+                config['twitter']['access_token_key'],
+                config['twitter']['access_token_secret'])
+            if not self.twitter_api.VerifyCredentials():
+                raise Exception("Invalid twitter credentials.")
+        else: self.twitter_enabled = False
 
         # Will be filled in by a background thread.
         self.current_content = {}
@@ -106,7 +122,7 @@ class SpinDizzyBoards(object):
             board_feedgen.description("Posts scraped from {}"
                                       .format(self.board_names[board_command]))
             board_feedgen.id(id_generator(board_command, 0))
-            for post in self.current_content[board_command].values():
+            for post in sorted(self.current_content[board_command].values(), key=lambda  p: p['time']):
                 for entry in (master_feedgen.add_entry(), board_feedgen.add_entry()):
                     entry.title(post['title'])
                     # RSS insists on an email which is annoying.
@@ -128,6 +144,7 @@ class SpinDizzyBoards(object):
         return "{} {}".format(board, index)
 
     def url_for_post(self, board: str, post_id: int):
+        # TODO(hyena): Pyramid has some nice utilities to construct URLs in a more portable way.
         url_base = self.url_base[:-1] if self.url_base.endswith('/') else self.url_base
         return "{}/{}/{}".format(url_base, board, post_id)
 
@@ -151,15 +168,43 @@ class SpinDizzyBoards(object):
                         if post_id not in old_content[board]:
                             logging.debug("New post {post_id} in {board}"
                                           .format(post_id=post_id, board=board))
-                            print("{name} posted {subject}. {command} or {url} to read."
-                                  .format(name=self.current_content[board][post_id]['owner_name'],
-                                          subject=self.current_content[board][post_id]['owner_name']['title'],
-                                          command=self.command_for_post(board, post_id),
-                                          url=self.url_for_post(board, post_id)))
+                            # TODO(hyena): Mastodon support.
+                            if not self.twitter_enabled:
+                                continue
+                            # Do some tweet math. Assume the URL max length is 23 characters due to twitter's
+                            # shortening.
+                            # Example post:
+                            # "Regan posted '13 Great Recipes for roasted Wallaby' in the General board <url>"
+                            # This would be 74 characters + 23 for the url and under the 140 limit.
+                            tweet_template = ("{name} posted '{title}' in the {board_name} {url}")
+                            name = self.current_content[board][post_id]['owner_name']
+                            title = self.current_content[board][post_id]['title']
+                            board_name = self.board_names[board]
+                            url = self.url_for_post(board=board, post_id=post_id)
+
+                            title_space = (_TWEET_LENGTH
+                                           - len(tweet_template.format(name=name,
+                                                                    title='',
+                                                                    board_name=board_name,
+                                                                    url=''))
+                                           - min(len(url), 23))
+                            if title_space < 0:
+                                # We've probably gone over the 140 limit.
+                                logging.warning("Expect to exceed tweet length limit. Bailing....")
+                                continue
+                            tweet_text = tweet_template.format(name=name,
+                                                               title=textwrap.shorten(title, title_space),
+                                                               board_name=board_name,
+                                                               url=url)
+                            try:
+                                self.twitter_api.PostUpdate(tweet_text)
+                            except TwitterError as te:
+                                logging.warning(te, exc_info=True)
                         elif ((old_content[board][post_id]['title']
                                != self.current_content[board][post_id]['title'])
                               or (old_content[board][post_id]['content']
                                   != self.current_content[board][post_id]['content'])):
+                            # TODO(hyena): Support alerts for Updates?
                             logging.debug("Editted post {post_id} in {board}"
                                           .format(post_id=post_id, board=board))
             # New content gotten, alerts made. Rest if we can....
