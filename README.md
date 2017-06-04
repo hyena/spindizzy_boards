@@ -43,7 +43,7 @@ This code has been tested with Python 3.5, but should probably work in 2.7 and 3
   2. `pip install -r requirements.txt`
   3. `cp config.toml.sample config.toml`
   4. Open `config.toml` with your favorite editor and fill in the values appropriately for how you've set up your muck environment.
-  5. Test it: `python spindizzy_boards/spindizzy_boards.py` and check out the webserver according to the port you set up in `config.toml`. e.g. http://localhost:7000/+read
+  5. Test it: `python spindizzy_boards/spindizzy_boards.py` and check out the webserver according to the port you set up in `config.toml`. e.g. http://localhost:7000/sdb/+read
 
 
 Testing without a Muck
@@ -56,7 +56,7 @@ TODO
 ----
 There's plenty of work left to do if people are interested:
  - [X] Atom integration for rss readers
- - [ ] Twitter integration
+ - [X] Twitter integration
  - [ ] Mastodon integration
  - [ ] Re-architect the app into a json exposing endpoint with a react front-end
  - [ ] SSL support, even though we'll usually run behind nginx

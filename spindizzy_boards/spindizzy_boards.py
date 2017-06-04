@@ -112,13 +112,13 @@ class SpinDizzyBoards(object):
         new_feeds = {}
         master_feedgen = FeedGenerator()
         master_feedgen.title("SpinDizzy Boards Master")
-        master_feedgen.link({'href': '/atom', 'rel': 'self'})
+        master_feedgen.link({'href': '/sdb/atom', 'rel': 'self'})
         master_feedgen.description("All posts as scraped from SpinDizzy")
         master_feedgen.id(id_generator('master', 0))
         for board_command in self.current_content:
             board_feedgen = FeedGenerator()
             board_feedgen.title("SpinDizzy {}".format(self.board_names[board_command]))
-            board_feedgen.link({'href': '/{}/atom'.format(board_command), 'rel': 'self'})
+            board_feedgen.link({'href': '/sdb/{}/atom'.format(board_command), 'rel': 'self'})
             board_feedgen.description("Posts scraped from {}"
                                       .format(self.board_names[board_command]))
             board_feedgen.id(id_generator(board_command, 0))
@@ -128,9 +128,9 @@ class SpinDizzyBoards(object):
                     # RSS insists on an email which is annoying.
                     entry.author({'name': post['owner_name']})
                     entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
-                    entry.link({'href': '{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
+                    entry.link({'href': '/sdb/{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
                     entry.content(post['content'], type='text')
-                    entry.id(id_generator(name='{}/{}'.format(board_command, post['time']),
+                    entry.id(id_generator(name='/sdb/{}/{}'.format(board_command, post['time']),
                                           ts=post['time']))
             new_feeds[board_command] = board_feedgen.atom_str(pretty=True)
         new_feeds['master'] = master_feedgen.atom_str(pretty=True)
@@ -146,7 +146,7 @@ class SpinDizzyBoards(object):
     def url_for_post(self, board: str, post_id: int):
         # TODO(hyena): Pyramid has some nice utilities to construct URLs in a more portable way.
         url_base = self.url_base[:-1] if self.url_base.endswith('/') else self.url_base
-        return "{}/{}/{}".format(url_base, board, post_id)
+        return "{}/sdb/{}/{}".format(url_base, board, post_id)
 
     def background_download(self):
         """Background task to download board content."""
@@ -288,23 +288,28 @@ if __name__ == "__main__":
     config = Configurator()
     config.include("pyramid_jinja2")
 
-    config.add_static_view(name='static', path='static')
+    def setup_routes(config):
+        """Sets up all routes."""
+        config.add_static_view(name='static', path='static')
 
-    config.add_route('board_list', '/')
-    config.add_view(worker.list_boards, route_name='board_list', renderer="templates/boardlist.jinja2")
+        config.add_route('board_list', '/')
+        config.add_view(worker.list_boards, route_name='board_list', renderer="templates/boardlist.jinja2")
 
-    # n.b. this must be registered before the /board_command route.
-    config.add_route('master_feed', '/atom')
-    config.add_view(worker.master_feed, route_name='master_feed')
+        # n.b. this must be registered before the /board_command route.
+        config.add_route('master_feed', '/atom')
+        config.add_view(worker.master_feed, route_name='master_feed')
 
-    config.add_route('posts_list', '/{board_command}')
-    config.add_view(worker.list_posts, route_name='posts_list', renderer="templates/postlist.jinja2")
+        config.add_route('posts_list', '/{board_command}')
+        config.add_view(worker.list_posts, route_name='posts_list', renderer="templates/postlist.jinja2")
 
-    config.add_route('view_post', '/{board_command}/{post_id:\d+}')
-    config.add_view(worker.view_post, route_name='view_post', renderer="templates/post.jinja2")
+        config.add_route('view_post', '/{board_command}/{post_id:\d+}')
+        config.add_view(worker.view_post, route_name='view_post', renderer="templates/post.jinja2")
 
-    config.add_route('board_feed', '/{board_command}/atom')
-    config.add_view(worker.board_feed, route_name='board_feed')
+        config.add_route('board_feed', '/{board_command}/atom')
+        config.add_view(worker.board_feed, route_name='board_feed')
+
+    config.include(setup_routes, route_prefix='sdb')
+    config.add_notfound_view(lambda x: HTTPNotFound(), append_slash=True)
     # TODO(hyena): Set up a *real* wsgi environment.
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', conf_toml['web']['port'], app)

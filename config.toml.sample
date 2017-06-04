@@ -26,9 +26,7 @@ boards = [['+read', 'General Board'],
 
 
 [web]
-# route_prefix will be prepended to all routes in the web app. This can be helpful,
-# for example, if you're running the app behind a reverse proxy.
-route_prefix = 'spindizzy_boards'
+url_base = "https://hyena.io/"  # Used to make urls in twitter links.
 port = 7000  # Port the webserver should bind to.
 # `feed_domain` is used exclusively to make atom/rss feed ids and can be ignored
 # if you don't care about that feature. This should be either a domain or an email.
@@ -41,6 +39,7 @@ consumer_key = 'TWITTER_CONSUMER_KEY',
 consumer_secret = 'TWITTER_CONSUMER_SECRET',
 access_token_key = 'TWITTER_ACCESS_TOKEN',
 access_token_secret = 'TWITTER_ACCESS_TOKE_SECRET'
+
 
 [mastodon]  # Unimplemented
 enabled = false
