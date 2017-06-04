@@ -58,6 +58,7 @@ There's plenty of work left to do if people are interested:
  - [X] Atom integration for feed readers
  - [X] Twitter integration
  - [ ] Mastodon integration
+ - [ ] RSS feed generation if people desire it
  - [ ] Re-architect the app into a json exposing endpoint with a react front-end
  - [ ] SSL support, even though we'll usually run behind nginx
  - [ ] Posts should be saved historically in a SQLAlchemy database

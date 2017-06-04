@@ -106,9 +106,10 @@ class SpinDizzyBoards(object):
                            date=datetime.fromtimestamp(ts).strftime('%Y-%m-%d'),
                            name=name))
 
-        def translate_content_to_html(content):
-            return '\n'.join(('<p style="white-space:pre-wrap;margin:0">' + escape(x) + "</p>"
-                              for x in content.split('\n')))
+        def translate_content_to_xhtml(content):
+            """Try to render a board post as faithfully as possible in xhtml."""
+            # Unfortunately most readers I find strip the style attribute so we'll probably have to work on this.
+            return '<p style="white-space:pre-wrap;">{}</p>'.format(escape(content).replace('\n', '<br />'))
 
         # TODO(hyena): It would be more useful if these links were absolute.
         # Consider adding that if we ever make the web-app aware of its own
@@ -136,7 +137,7 @@ class SpinDizzyBoards(object):
                 entry.author({'name': post['owner_name']})
                 entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
                 entry.link({'href': '/sdb/{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
-                entry.content(translate_content_to_html(post['content']), type='xhtml')
+                entry.content(translate_content_to_xhtml(post['content']), type='xhtml')
                 entry.id(id_generator(name='/sdb/{}/{}'.format(board_command, post['time']),
                                       ts=post['time']))
                 master_entry_list.append(entry)
