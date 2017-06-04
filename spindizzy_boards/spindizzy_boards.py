@@ -122,7 +122,7 @@ class SpinDizzyBoards(object):
             board_feedgen.description("Posts scraped from {}"
                                       .format(self.board_names[board_command]))
             board_feedgen.id(id_generator(board_command, 0))
-            for post in sorted(self.current_content[board_command].values(), key=lambda  p: p['time']):
+            for post in sorted(self.current_content[board_command].values(), key=lambda p: -p['time']):
                 for entry in (master_feedgen.add_entry(), board_feedgen.add_entry()):
                     entry.title(post['title'])
                     # RSS insists on an email which is annoying.
