@@ -120,6 +120,8 @@ class SpinDizzyBoards(object):
         master_feedgen.link({'href': '/sdb/atom', 'rel': 'self'})
         master_feedgen.description("All posts as scraped from SpinDizzy")
         master_feedgen.id(id_generator('master', 0))
+
+        master_entry_list = []
         for board_command in self.current_content:
             board_feedgen = FeedGenerator()
             board_feedgen.title("SpinDizzy {}".format(self.board_names[board_command]))
@@ -128,16 +130,21 @@ class SpinDizzyBoards(object):
                                       .format(self.board_names[board_command]))
             board_feedgen.id(id_generator(board_command, 0))
             for post in sorted(self.current_content[board_command].values(), key=lambda p: -p['time']):
-                for entry in (master_feedgen.add_entry(), board_feedgen.add_entry()):
-                    entry.title(post['title'])
-                    # RSS insists on an email which is annoying.
-                    entry.author({'name': post['owner_name']})
-                    entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
-                    entry.link({'href': '/sdb/{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
-                    entry.content(translate_content_to_html(post['content']), type='xhtml')
-                    entry.id(id_generator(name='/sdb/{}/{}'.format(board_command, post['time']),
-                                          ts=post['time']))
+                entry = board_feedgen.add_entry()
+                entry.title(post['title'])
+                # RSS insists on an email which is annoying.
+                entry.author({'name': post['owner_name']})
+                entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
+                entry.link({'href': '/sdb/{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
+                entry.content(translate_content_to_html(post['content']), type='xhtml')
+                entry.id(id_generator(name='/sdb/{}/{}'.format(board_command, post['time']),
+                                      ts=post['time']))
+                master_entry_list.append(entry)
             new_feeds[board_command] = board_feedgen.atom_str(pretty=True)
+
+        # Add the entries to the master feed in the right order.
+        for entry in sorted(master_entry_list, key=lambda e: -e.updated().timestamp()):
+            master_feedgen.add_entry(feedEntry=entry)
         new_feeds['master'] = master_feedgen.atom_str(pretty=True)
 
         return new_feeds
