@@ -2,12 +2,15 @@
 
 {% block breadcrumb %}
 <ul class="breadcrumb">
-  <li><a href="/">SpinDizzy Boards</a></li>
+  <li><a href="/sdb/">SpinDizzy Boards</a></li>
   <li>{{ board_name }}</li>
 </ul>
 {% endblock breadcrumb %}
 
 {% block title %} Posts on {{ board_name }} ({{ board }}){% endblock %}
+{% block head %}
+<link rel="alternate" type="application/atom+xml" title="SpinDizzy {{ board_name }}" href="atom" />
+{% endblock head %}
 
 {% block body %}
 <ol class="post-list">
