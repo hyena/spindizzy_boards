@@ -1,4 +1,5 @@
 from datetime import datetime
+from html import escape
 import logging
 import textwrap
 import threading
@@ -105,6 +106,10 @@ class SpinDizzyBoards(object):
                            date=datetime.fromtimestamp(ts).strftime('%Y-%m-%d'),
                            name=name))
 
+        def translate_content_to_html(content):
+            return '\n'.join(('<p style="white-space:pre-wrap;margin:0">' + escape(x) + "</p>"
+                              for x in content.split('\n')))
+
         # TODO(hyena): It would be more useful if these links were absolute.
         # Consider adding that if we ever make the web-app aware of its own
         # url.
@@ -129,7 +134,7 @@ class SpinDizzyBoards(object):
                     entry.author({'name': post['owner_name']})
                     entry.updated(datetime.fromtimestamp(post['time'], tz=self.tz))
                     entry.link({'href': '/sdb/{}/{}'.format(board_command, post['time']), 'rel': 'alternate'})
-                    entry.content(post['content'], type='text')
+                    entry.content(translate_content_to_html(post['content']), type='xhtml')
                     entry.id(id_generator(name='/sdb/{}/{}'.format(board_command, post['time']),
                                           ts=post['time']))
             new_feeds[board_command] = board_feedgen.atom_str(pretty=True)
