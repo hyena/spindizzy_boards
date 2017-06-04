@@ -26,7 +26,7 @@ boards = [['+read', 'General Board'],
 
 
 [web]
-url_base = "https://hyena.io/"  # Used to make urls in twitter links.
+url_base = "https://your_url_to_the_app.com"  # Used to make urls in twitter links.
 port = 7000  # Port the webserver should bind to.
 # `feed_domain` is used exclusively to make atom/rss feed ids and can be ignored
 # if you don't care about that feature. This should be either a domain or an email.
