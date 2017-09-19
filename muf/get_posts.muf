@@ -6,6 +6,7 @@
 )
 ( Some strings to help an external bot use this program. )
 $def START_STRING "--- START"
+$def POST_STRING "--- POST"
 $def END_STRING "--- END"
 $def ERROR_STRING "--- ERROR: "
 
@@ -55,6 +56,7 @@ $def CORKBOARD_REF #21810
     array_fmtstrings
     foreach
         me @ swap notify
+        0 tread pop ( Issue a timed read with a wait time of 0 to flush the output queue. )
     repeat
     me @ END_STRING notify
 ;
