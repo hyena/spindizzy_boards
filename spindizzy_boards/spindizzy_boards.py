@@ -55,6 +55,7 @@ class SpinDizzyBoards(object):
         self.feeds = {}
 
         # Start up our background task.
+        self.interval = config['interval']
         self.executor = ThreadPoolExecutor(1)
         self.loop = asyncio.get_event_loop()
         self.download_task = asyncio.ensure_future(
