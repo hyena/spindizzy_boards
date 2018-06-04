@@ -12,7 +12,6 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPServiceUnavailable
 from pyramid.response import Response
 import pytz
 import toml
-import twitter
 from twitter.error import TwitterError
 from wsgiref.simple_server import make_server
 
@@ -50,17 +49,6 @@ class SpinDizzyBoards(object):
         self.url_base = config['web']['url_base']
         self.tz = pytz.timezone(config['timezone'])
         self.feed_domain = config['web']['feed_domain']
-
-        if config['twitter']['enabled']:
-            self.twitter_enabled = True
-            self.twitter_api = twitter.Api(
-                config['twitter']['consumer_key'],
-                config['twitter']['consumer_secret'],
-                config['twitter']['access_token_key'],
-                config['twitter']['access_token_secret'])
-            if not self.twitter_api.VerifyCredentials():
-                raise Exception("Invalid twitter credentials.")
-        else: self.twitter_enabled = False
 
         # Will be filled in by a background thread.
         self.current_content = {}
@@ -170,57 +158,12 @@ class SpinDizzyBoards(object):
         # thread dies quietly.
         while True:
             next_runtime = time.time() + self.interval
-            old_content = self.current_content
             # Expose the downloaded content without waiting for sending announcements.
             # The GIL makes this safe.
             self.current_content = self.downloader.get_posts()
             self.feeds = self._construct_feeds()
-            if old_content:  # Only send out alerts if we previously had content.
-                for board in self.current_content:
-                    for post_id in self.current_content[board]:
-                        if post_id not in old_content[board]:
-                            logging.debug("New post {post_id} in {board}"
-                                          .format(post_id=post_id, board=board))
-                            # TODO(hyena): Mastodon support.
-                            if not self.twitter_enabled:
-                                continue
-                            # Do some tweet math. Assume the URL max length is 23 characters due to twitter's
-                            # shortening.
-                            # Example post:
-                            # "Regan posted '13 Great Recipes for roasted Wallaby' in the General board <url>"
-                            # This would be 74 characters + 23 for the url and under the 140 limit.
-                            tweet_template = ("{name} posted '{title}' in the {board_name} {url}")
-                            name = self.current_content[board][post_id]['owner_name']
-                            title = self.current_content[board][post_id]['title']
-                            board_name = self.board_names[board]
-                            url = self.url_for_post(board=board, post_id=post_id)
 
-                            title_space = (_TWEET_LENGTH
-                                           - len(tweet_template.format(name=name,
-                                                                    title='',
-                                                                    board_name=board_name,
-                                                                    url=''))
-                                           - min(len(url), 23))
-                            if title_space < 0:
-                                # We've probably gone over the 140 limit.
-                                logging.warning("Expect to exceed tweet length limit. Bailing....")
-                                continue
-                            tweet_text = tweet_template.format(name=name,
-                                                               title=textwrap.shorten(title, title_space),
-                                                               board_name=board_name,
-                                                               url=url)
-                            try:
-                                self.twitter_api.PostUpdate(tweet_text)
-                            except TwitterError as te:
-                                logging.warning(te, exc_info=True)
-                        elif ((old_content[board][post_id]['title']
-                               != self.current_content[board][post_id]['title'])
-                              or (old_content[board][post_id]['content']
-                                  != self.current_content[board][post_id]['content'])):
-                            # TODO(hyena): Support alerts for Updates?
-                            logging.debug("Editted post {post_id} in {board}"
-                                          .format(post_id=post_id, board=board))
-            # New content gotten, alerts made. Rest if we can....
+            # New content gotten. Rest if we can....
             sleep_length = next_runtime - time.time()
             if sleep_length > 0:
                 time.sleep(sleep_length)

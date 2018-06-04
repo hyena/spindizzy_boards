@@ -57,12 +57,10 @@ TODO
 There's plenty of work left to do if people are interested:
  - [X] Atom integration for feed readers
  - [X] Twitter integration
- - [ ] Mastodon integration
  - [ ] RSS feed generation if people desire it
  - [ ] Re-architect the app into a json exposing endpoint with a react front-end
  - [ ] SSL support, even though we'll usually run behind nginx
  - [ ] Posts should be saved historically in a SQLAlchemy database
- - [ ] The app should give a grace period to a new or edited post before sending out alerts so that deletes or multiple edits don't spam followers
  - [X] Move CSS into static assets for a little more efficiency.
 
 

@@ -32,14 +32,3 @@ port = 7000  # Port the webserver should bind to.
 # if you don't care about that feature. This should be either a domain or an email.
 feed_domain = 'spindizzy.org'
 
-
-[twitter]
-enabled = false  # Whether or not to advertise changes to twitter
-consumer_key = 'TWITTER_CONSUMER_KEY',
-consumer_secret = 'TWITTER_CONSUMER_SECRET',
-access_token_key = 'TWITTER_ACCESS_TOKEN',
-access_token_secret = 'TWITTER_ACCESS_TOKE_SECRET'
-
-
-[mastodon]  # Unimplemented
-enabled = false
