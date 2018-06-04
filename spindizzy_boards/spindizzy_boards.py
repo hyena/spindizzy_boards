@@ -1,8 +1,9 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from html import escape
 import logging
 import textwrap
-import threading
 import time
 from typing import Dict
 
@@ -19,7 +20,6 @@ from muck_downloader import FakeMuckDownloader, MuckDownloader
 
 
 _TIME_FORMAT = "%Y-%m-%d %I:%M %p"
-_TWEET_LENGTH = 140
 
 
 class SpinDizzyBoards(object):
@@ -55,10 +55,10 @@ class SpinDizzyBoards(object):
         self.feeds = {}
 
         # Start up our background task.
-        self.interval = config['interval']
-        self.download_thread = threading.Thread(target=self.background_download)
-        self.download_thread.daemon = True
-        self.download_thread.start()
+        self.executor = ThreadPoolExecutor(1)
+        self.loop = asyncio.get_event_loop()
+        self.download_task = asyncio.ensure_future(
+            self.loop.run_in_executor(self.executor, self.background_download))
 
     def post2template(self, x):
         """
@@ -158,11 +158,14 @@ class SpinDizzyBoards(object):
         # thread dies quietly.
         while True:
             next_runtime = time.time() + self.interval
-            # Expose the downloaded content without waiting for sending announcements.
-            # The GIL makes this safe.
-            self.current_content = self.downloader.get_posts()
-            self.feeds = self._construct_feeds()
-
+            try:
+                # Expose the downloaded content without waiting for sending announcements.
+                # The GIL makes this safe.
+                self.current_content = self.downloader.get_posts()
+                self.feeds = self._construct_feeds()
+            except:
+                # Optimistically continue.
+                logging.warn('Error while trying to retrieve boards', exc_info=True)
             # New content gotten. Rest if we can....
             sleep_length = next_runtime - time.time()
             if sleep_length > 0:
@@ -214,7 +217,7 @@ class SpinDizzyBoards(object):
         """View callable that returns an atom feed for all boards."""
         if not self.feeds:
             # Tell the user to come back later.
-            raise HTTPServiceUnavailable(headers={'Retry-After': 60})
+            raise HTTPServiceUnavailable(headers={'Retry-After': '60'})
         return Response(self.feeds['master'],
                         content_type='application/atom+xml')
 
@@ -225,7 +228,7 @@ class SpinDizzyBoards(object):
             raise HTTPNotFound("No such board found.")
         elif not self.feeds:
             # Tell the user to come back later.
-            raise HTTPServiceUnavailable(headers={'Retry-After': 60})
+            raise HTTPServiceUnavailable(headers={'Retry-After': '60'})
         elif board not in self.feeds:
             raise HTTPNotFound("No such board found.")
         return Response(self.feeds[board],

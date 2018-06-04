@@ -4,12 +4,15 @@ from a remote MUCK server.
 """
 from collections import deque
 from datetime import datetime
-from typing import Dict, List
+from typing import List
 import json
 import logging
 
 import ssltelnet
 import toml
+
+
+_MUCK_READ_TIMEOUT = 5  # Read timeout in seconds.
 
 
 class MuckDownloader(object):
@@ -37,18 +40,29 @@ class MuckDownloader(object):
         lines = deque([])
         def check_line(line, prefix):
             "Helper method that ensures that a line starts with a particular prefix."
-            assert line.startswith(prefix)
+            if not line.startswith(prefix):
+                self._polite_exit(telnet=telnet)
+                raise ValueError("Expected {prefix} prefix in line: {line}".format(prefix=prefix, line=line))
             return line.split(prefix)[1]
+
+        def read_until_careful(until):
+            "Helper method that ensures that we either successfully read a target or fail."
+            read = telnet.read_until(until, _MUCK_READ_TIMEOUT)
+            if not read.endswith(until):
+                # We dind't read our target. Bail out.
+                self._polite_exit(telnet=telnet)
+                raise ValueError("Timeout while looking for {until}.".format(until=until))
+            return read
 
         telnet.read_very_eager()  # Clear out as much out of the pipe as possible.
         telnet.write("{get_posts} {board}\n"
                 .format(get_posts=self.get_posts_command, board=board_command)
                 .encode(encoding='ascii'))
-        telnet.read_until(b"--- START\r\n")
+        read_until_careful(b"--- START\r\n")
 
         # Process line by line:
         while True:
-            line = telnet.read_until(b"\r\n").decode()
+            line = read_until_careful(b"\r\n").decode()
             if line.startswith("--- ERROR: "):
                 raise Exception("Couldn't retrieve boards posts: " + line[len("--- ERROR: "):])
             elif line == "--- END\r\n":
@@ -93,9 +107,24 @@ class MuckDownloader(object):
         telnet.write("{get_name} {dbref}\n"
                 .format(get_name=self.get_name_command, dbref=dbref)
                 .encode(encoding='ascii'))
-        telnet.read_until(b"--- NAME: ")
-        name = telnet.read_until(b"\r\n")
+        # Use a timeout for this because it can fail on a dead ref.
+        read = telnet.read_until(b"--- NAME: ", _MUCK_READ_TIMEOUT)
+        if not read.endswith(b"--- NAME: "):
+            logging.warn("Couldn't find ref for {dbref}".format(dbref=dbref))
+            telnet.read_very_eager()  # Clear the buffer.
+            return 'UNKNOWN'
+
+        name = telnet.read_until(b"\r\n", _MUCK_READ_TIMEOUT)
         return name[:-2].decode()
+
+    def _polite_exit(self, telnet):
+        """
+        Attempt to bail from the server politely so we don't leave connections around.
+
+        Called in the case of a logic error.
+        """
+        telnet.write("\nQUIT\n".encode(encoding='ascii'))
+        telnet.close()
 
     def get_posts(self):
         """Downloads the contents of all the configured boards, returning them as a dict."""
@@ -130,9 +159,7 @@ class MuckDownloader(object):
                 post['owner_name'] = names[post['owner']]
         logging.debug("Done formatting boards.")
 
-        # Disconnect politely.
-        s.write("QUIT\n".encode(encoding='ascii'))
-        s.close()
+        self._polite_exit(telnet=s)
         return boards
 
 
