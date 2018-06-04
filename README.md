@@ -62,6 +62,7 @@ There's plenty of work left to do if people are interested:
  - [ ] SSL support, even though we'll usually run behind nginx
  - [ ] Posts should be saved historically in a SQLAlchemy database
  - [X] Move CSS into static assets for a little more efficiency.
+ - [ ] Confirm atom links work well in MoinMoin
 
 
 Acknowledgements
